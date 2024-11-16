@@ -1,25 +1,40 @@
-const WebSocket = require("ws");
+const WebSocket = require('ws'); // Importar la librería WebSocket
 
-const PORT = process.env.PORT || 8080; // Usar el puerto asignado por Heroku o 8080 para pruebas locales
-const server = new WebSocket.Server({ port: PORT });
+// Crear el servidor WebSocket en el puerto 10000
+const wss = new WebSocket.Server({ port: 10000 }, () => {
+  console.log('Servidor WebSocket escuchando en el puerto 10000');
+});
 
-server.on("connection", (ws) => {
-  console.log("Nuevo cliente conectado");
+// Manejar nuevas conexiones
+wss.on('connection', (ws) => {
+  console.log('Nuevo cliente conectado');
 
-  ws.on("message", (message) => {
-    console.log("Mensaje recibido:", message);
+  // Manejar mensajes recibidos de los clientes
+  ws.on('message', (message) => {
+    console.log(`Mensaje recibido: ${message}`);
 
-    // Retransmitir el mensaje a todos los clientes conectados
-    server.clients.forEach((client) => {
-      if (client !== ws && client.readyState === WebSocket.OPEN) {
-        client.send(message);
-      }
-    });
+    // Procesar el mensaje y realizar acciones
+    if (message === 'LED_ON') {
+      console.log('Comando recibido: Encender LED');
+      // Aquí puedes realizar otras acciones si es necesario
+
+      // Responder al cliente
+      ws.send('LED está encendido');
+    } else if (message === 'LED_OFF') {
+      console.log('Comando recibido: Apagar LED');
+      // Aquí puedes realizar otras acciones si es necesario
+
+      // Responder al cliente
+      ws.send('LED está apagado');
+    } else {
+      console.log('Comando desconocido');
+      ws.send('Comando no reconocido');
+    }
   });
 
-  ws.on("close", () => {
-    console.log("Cliente desconectado");
+  // Manejar la desconexión del cliente
+  ws.on('close', () => {
+    console.log('Cliente desconectado');
   });
 });
 
-console.log(`Servidor WebSocket escuchando en el puerto ${PORT}`);
