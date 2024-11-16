@@ -11,20 +11,15 @@ wss.on('connection', (ws) => {
 
   // Manejar mensajes recibidos de los clientes
   ws.on('message', (message) => {
-    console.log(`Mensaje recibido: ${message}`);
+    const trimmedMessage = message.trim(); // Elimina espacios o caracteres adicionales
+    console.log(`Mensaje recibido: ${trimmedMessage}`);
 
     // Procesar el mensaje y realizar acciones
-    if (message === 'LED_ON') {
+    if (trimmedMessage === 'LED_ON') {
       console.log('Comando recibido: Encender LED');
-      // Aquí puedes realizar otras acciones si es necesario
-
-      // Responder al cliente
       ws.send('LED está encendido');
-    } else if (message === 'LED_OFF') {
+    } else if (trimmedMessage === 'LED_OFF') {
       console.log('Comando recibido: Apagar LED');
-      // Aquí puedes realizar otras acciones si es necesario
-
-      // Responder al cliente
       ws.send('LED está apagado');
     } else {
       console.log('Comando desconocido');
@@ -37,4 +32,3 @@ wss.on('connection', (ws) => {
     console.log('Cliente desconectado');
   });
 });
-
