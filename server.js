@@ -6,8 +6,8 @@ const wss = new WebSocket.Server({ port: 10000 }, () => {
 });
 
 // Variables para guardar los clientes
-let lilygoClient = null;
 let webClient = null;
+let lilygoClient = null;
 
 // Enviar "ping" a todos los clientes cada 30 segundos para evitar hibernación
 setInterval(() => {
@@ -27,42 +27,45 @@ wss.on('connection', (ws) => {
     const trimmedMessage = message.toString().trim();
     console.log(`Mensaje recibido: ${trimmedMessage}`);
 
-    // Identificar el cliente al conectarse
-    if (trimmedMessage === 'IDENTIFY:LILYGO') {
-      lilygoClient = ws;
-      console.log('Cliente identificado como LILYGO');
-      ws.send('Identificación exitosa: LILYGO');
-      return;
-    } else if (trimmedMessage === 'IDENTIFY:WEB') {
+    // Identificar clientes
+    if (trimmedMessage === 'IDENTIFY:WEB') {
       webClient = ws;
       console.log('Cliente identificado como Página Web');
       ws.send('Identificación exitosa: Página Web');
       return;
+    } else if (trimmedMessage === 'IDENTIFY:LILYGO') {
+      lilygoClient = ws;
+      console.log('Cliente identificado como LILYGO');
+      ws.send('Identificación exitosa: LILYGO');
+      return;
     }
 
-    // Procesar comandos
-    if (trimmedMessage === 'LED_ON' || trimmedMessage === 'LED_OFF') {
-      console.log(`Comando recibido: ${trimmedMessage}`);
-      
-      // Reenviar comandos de la página web a la placa LILYGO
-      if (webClient === ws && lilygoClient) {
-        lilygoClient.send(trimmedMessage);
-        ws.send(`Comando reenviado a LILYGO: ${trimmedMessage}`);
+    // Procesar comandos desde la página web
+    if (webClient === ws) {
+      if (trimmedMessage === 'LED_ON' || trimmedMessage === 'LED_OFF') {
+        console.log(`Comando recibido: ${trimmedMessage}`);
+        
+        // Reenviar comando a LILYGO
+        if (lilygoClient && lilygoClient.readyState === WebSocket.OPEN) {
+          lilygoClient.send(trimmedMessage);
+          ws.send(`Comando reenviado a LILYGO: ${trimmedMessage}`);
+        } else {
+          ws.send('Error: LILYGO no está conectado');
+        }
+      } else {
+        ws.send('Comando no reconocido por la Página Web');
       }
-    } else {
-      console.log('Comando desconocido');
-      ws.send('Comando no reconocido');
     }
   });
 
   // Manejar la desconexión del cliente
   ws.on('close', () => {
-    if (lilygoClient === ws) {
-      console.log('LILYGO desconectado');
-      lilygoClient = null;
-    } else if (webClient === ws) {
+    if (webClient === ws) {
       console.log('Página Web desconectada');
       webClient = null;
+    } else if (lilygoClient === ws) {
+      console.log('LILYGO desconectado');
+      lilygoClient = null;
     } else {
       console.log('Cliente desconocido desconectado');
     }
