@@ -11,8 +11,16 @@ wss.on('connection', (ws) => {
 
   // Manejar mensajes recibidos de los clientes
   ws.on('message', (message) => {
-    const trimmedMessage = message.trim(); // Elimina espacios o caracteres adicionales
-    console.log(`Mensaje recibido: ${trimmedMessage}`);
+    let trimmedMessage;
+    try {
+      // Convertir el mensaje a cadena y eliminar espacios extra
+      trimmedMessage = message.toString().trim();
+      console.log(`Mensaje recibido: ${trimmedMessage}`);
+    } catch (error) {
+      console.error('Error al procesar el mensaje:', error);
+      ws.send('Error en el formato del mensaje.');
+      return;
+    }
 
     // Procesar el mensaje y realizar acciones
     if (trimmedMessage === 'LED_ON') {
